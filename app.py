@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_score, recall_score, f1_score, matthews_corrcoef, confusion_matrix
 
 # Page Config
@@ -21,6 +22,7 @@ st.markdown("""
     .stApp {
         background: linear-gradient(to right, #f8f9fa, #e9ecef);
         font-family: 'Inter', sans-serif;
+        color: #333333;
     }
     
     /* Sidebar */
@@ -29,24 +31,26 @@ st.markdown("""
         border-right: 1px solid #e9ecef;
     }
     
-    /* Headings */
-    h1, h2, h3 {
-        color: #2c3e50;
+    /* Headings force color */
+    h1, h2, h3, h4, h5, h6 {
+        color: #2c3e50 !important;
         font-weight: 700;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     
     /* Metrics Cards */
     div[data-testid="metric-container"] {
         background-color: #ffffff;
         border: 1px solid #e9ecef;
-        padding: 5% 5% 5% 10%;
+        padding: 10px;
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s;
+        color: #333333;
     }
-    div[data-testid="metric-container"]:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Specific text elements */
+    .stMarkdown p {
+        color: #444444 !important;
     }
     
     /* Buttons */
@@ -60,6 +64,7 @@ st.markdown("""
     }
     .stButton>button:hover {
         background-color: #45a049;
+        color: white;
     }
     
     /* Custom Container */
@@ -74,7 +79,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title and Description
-st.title("🧬 Breast Cancer AI Diagnostic Tool")
+st.markdown("<h1 style='text-align: center; color: #2c3e50;'>🧬 Breast Cancer AI Diagnostic Tool</h1>", unsafe_allow_html=True)
 st.markdown("""
 <div class="custom-card">
     <p style="font-size:18px; color:#555;">
@@ -108,12 +113,27 @@ uploaded_file = st.sidebar.file_uploader("Upload CSV File", type=["csv"], help="
 # Load Scaler and Model
 @st.cache_resource
 def load_artifacts(model_name):
+    # Use absolute paths to ensure robustness
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    models_dir = os.path.join(base_dir, "models")
+    
     # Load Scaler
-    scaler = joblib.load("models/scaler.joblib")
+    scaler_path = os.path.join(models_dir, "scaler.joblib")
+    if not os.path.exists(scaler_path):
+        st.error(f"❌ Critical Error: Scaler not found at {scaler_path}. Please check file structure.")
+        return None, None
+        
+    scaler = joblib.load(scaler_path)
     
     # Load Model
     filename = model_name.replace(" ", "_").lower() + ".joblib"
-    model = joblib.load(f"models/{filename}")
+    model_path = os.path.join(models_dir, filename)
+    
+    if not os.path.exists(model_path):
+        st.error(f"❌ Model file not found: {filename}")
+        return None, None
+
+    model = joblib.load(model_path)
     return scaler, model
 
 # Main Logic
