@@ -53,27 +53,7 @@ st.markdown("""
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     
-    /* Metrics Cards */
-    div[data-testid="metric-container"] {
-        background-color: #ffffff;
-        border: 1px solid #e9ecef;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        color: #000000 !important;
-    }
 
-    div[data-testid="metric-container"] label {
-        color: #000000 !important; /* Force Pitch Black Label */
-    }
-    
-    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
-        color: #000000 !important; /* Force Pitch Black Value */
-    }
-
-    div[data-testid="metric-container"] p {
-        color: #000000 !important; /* Force Pitch Black Paragraphs */
-    }
     
     /* Specific text elements */
     .stMarkdown p {
