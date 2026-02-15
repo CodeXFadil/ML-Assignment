@@ -62,6 +62,14 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         color: #333333;
     }
+
+    div[data-testid="metric-container"] label {
+        color: #555555 !important; /* Label Color */
+    }
+
+    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
+        color: #333333 !important; /* Value Color */
+    }
     
     /* Specific text elements */
     .stMarkdown p {
