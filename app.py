@@ -163,10 +163,18 @@ def load_artifacts(model_name):
     if model_path:
         try:
             model = joblib.load(model_path)
+            
+            # VALIDATION STEP: Try to predict on a dummy input to ensure compatibility
+            # This catches 'monotonic_cst' errors that happen at inference time, not load time
+            if scaler is not None:
+                dummy_input = np.zeros((1, 30)) # Breast cancer dataset has 30 features
+                model.predict(dummy_input)
+                
         except Exception as e:
-            st.warning(f"⚠️ Could not load model '{model_name}' (Version Mismatch): {e}. Retraining on the fly...")
+            st.warning(f"⚠️ Model compatibility issue detected: {e}. Retraining on the fly...")
+            model = None # Force retraining
 
-    # Fallback: Retrain if artifacts are missing or failed to load
+    # Fallback: Retrain if artifacts are missing or failed to load/validate
     if scaler is None or model is None:
         scaler, model = retrain_model_on_fly(model_name)
         
