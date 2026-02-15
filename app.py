@@ -60,15 +60,19 @@ st.markdown("""
         padding: 10px;
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        color: #333333;
+        color: #000000 !important;
     }
 
     div[data-testid="metric-container"] label {
-        color: #555555 !important; /* Label Color */
+        color: #000000 !important; /* Force Pitch Black Label */
+    }
+    
+    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
+        color: #000000 !important; /* Force Pitch Black Value */
     }
 
-    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
-        color: #333333 !important; /* Value Color */
+    div[data-testid="metric-container"] p {
+        color: #000000 !important; /* Force Pitch Black Paragraphs */
     }
     
     /* Specific text elements */
