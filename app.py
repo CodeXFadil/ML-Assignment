@@ -108,6 +108,16 @@ st.markdown("""
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Asklepios_stick.svg/1200px-Asklepios_stick.svg.png", width=50) # Placeholder medical icon
 st.sidebar.header("Configuration")
 st.sidebar.markdown("---")
+# Download Button for Sample Data
+if os.path.exists("sample_test_data.csv"):
+    with open("sample_test_data.csv", "rb") as file:
+        st.sidebar.download_button(
+            label="Example CSV",
+            data=file,
+            file_name="sample_test_data.csv",
+            mime="text/csv",
+            help="Download this sample file to test the app."
+        )
 
 # 1. Model Selection
 st.sidebar.subheader("🤖 Select Model")
