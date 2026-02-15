@@ -5,7 +5,22 @@ import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_score, recall_score, f1_score, matthews_corrcoef, confusion_matrix
+
+# Fallback Training Imports
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 
 # Page Config
 st.set_page_config(
@@ -133,35 +148,68 @@ def load_artifacts(model_name):
 
     # Load Scaler
     scaler_path = find_file("scaler.joblib")
-    if scaler_path is None:
-        # Debugging: Print current working directory and list files
-        cwd = os.getcwd()
-        files_in_cwd = os.listdir(cwd)
-        st.error(f"❌ Critical Error: 'scaler.joblib' not found.")
-        st.error(f"Current Working Directory: {cwd}")
-        st.error(f"Files in CWD: {files_in_cwd}")
-        
-        # Check if models folder exists
-        models_path = os.path.join(cwd, "models")
-        if os.path.exists(models_path):
-            st.error(f"Files in 'models' folder: {os.listdir(models_path)}")
-        else:
-            st.error(f"'models' folder not found at {models_path}")
+    scaler = None
+    if scaler_path:
+        try:
+            scaler = joblib.load(scaler_path)
+        except Exception as e:
+            st.warning(f"⚠️ Could not load scaler (Version Mismatch): {e}. Retraining...")
             
-        return None, None
-        
-    scaler = joblib.load(scaler_path)
-    
     # Load Model
     filename = model_name.replace(" ", "_").lower() + ".joblib"
     model_path = find_file(filename)
+    model = None
     
-    if model_path is None:
-        st.error(f"❌ Model file not found: {filename}")
-        return None, None
+    if model_path:
+        try:
+            model = joblib.load(model_path)
+        except Exception as e:
+            st.warning(f"⚠️ Could not load model '{model_name}' (Version Mismatch): {e}. Retraining on the fly...")
 
-    model = joblib.load(model_path)
+    # Fallback: Retrain if artifacts are missing or failed to load
+    if scaler is None or model is None:
+        scaler, model = retrain_model_on_fly(model_name)
+        
     return scaler, model
+
+@st.cache_resource
+def retrain_model_on_fly(model_name):
+    """
+    Retrains the specific model and scaler in-memory if loading fails.
+    This handles version mismatches between local env and Streamlit Cloud.
+    """
+    # 1. Load Data
+    data = load_breast_cancer()
+    X = pd.DataFrame(data.data, columns=data.feature_names)
+    y = pd.Series(data.target)
+    
+    # 2. Split (Same seed as original training)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=123, stratify=y
+    )
+    
+    # 3. Scale
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    
+    # 4. Define Model
+    models = {
+        "Logistic Regression": LogisticRegression(max_iter=1000),
+        "Decision Tree": DecisionTreeClassifier(random_state=123),
+        "kNN": KNeighborsClassifier(),
+        "Naive Bayes": GaussianNB(),
+        "Random Forest": RandomForestClassifier(random_state=123),
+        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=123)
+    }
+    
+    if model_name not in models:
+        st.error(f"Unknown model architecture: {model_name}")
+        return None, None
+        
+    clf = models[model_name]
+    clf.fit(X_train_scaled, y_train)
+    
+    return scaler, clf
 
 # Main Logic
 if uploaded_file is not None:
